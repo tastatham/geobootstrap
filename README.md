@@ -1,3 +1,4 @@
+# Geobootstrap
 `geobootstrap` is a novel computer simulation method that extends the classic bootstrap method (Efron 1979) in statistical analysis, to generate representative statistical measures e.g. standard deviations, confidence intervals and probability based values).
 Instead of passing the default None weights to pandas.sample, which results in equal probability weighting, kernel-based weights are used.
 The weights are determined by a distance decay function, that determines how quickly weights decrease as distances increase.
