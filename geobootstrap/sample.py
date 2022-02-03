@@ -36,8 +36,7 @@ def geobootstrap(
         list of pd.DataFrames
     """
 
-    coords1 = _get_coords(gdf1)
-    coords2 = _get_coords(gdf2)
+    coords1, coords2 = _get_coords(gdf1), _get_coords(gdf2)
 
     dist = cdist(coords2, coords1, metric)
     ks = _kernel(kernel, dist, bandwidth)
