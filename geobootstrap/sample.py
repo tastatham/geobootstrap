@@ -6,58 +6,40 @@ from geobootstrap.kernel import _kernel
 def geobootstrap(
     gdf1,
     gdf2,
-    coords1,
-    coords2,
-    n=1000,
-    metric="euclidean",
+    r=1000,
     kernel="gaussian",
+    metric="euclidean",
     bandwidth=1000,
-    col=None,
 ):
     """
+    Bootstrap a GeoDataFrame using defined kernel weights,
+    determined by a distance decay function to another GeoDataFrame
+
     Parameters
     ----------
     gdf1 : gpd.GeoDataFrame
         GeoDataFrame to calculate distances from
     gdf1 : gpd.GeoDataFrame
         GeoDataFrame to calculate distances to
-    coords1 : array_like (optional)
-        coordinates for geodataframe GeoDataFrame to calculate distances
-    coords2 : gpd.GeoDataFrame (optional)
-    n : int
+    r : int
         how many resamples with replacement to return
-        coordinates for geodataframe GeoDataFrame to calculate distances
+    kernel : str
+        kernel distance-decay function
     metric : str
         how to calculate distances between coordinates
-    kernel : str
-        kernel function
     bandwidth : int
-       bandwidth value in metres
-    col : str (optional)
-        whether to return list of gpd.GeoDataFrames or arrays, based on column
+       bandwidth or fixed distance
 
     Returns
     -------
     type : list
-        either a list of pd.DataFrames or np.array
+        list of pd.DataFrames
     """
 
-    if coords1 is None:
-        coords1 = _get_coords(gdf1)
-    if coords2 is None:
-        coords2 = _get_coords(gdf2)
+    coords1 = _get_coords(gdf1)
+    coords2 = _get_coords(gdf2)
 
-    gs = []
-    for i in range(len(gdf2)):
-        coord = coords2[i]
-        dist = cdist([coord], coords1, metric).reshape(-1)
-        k = _kernel(kernel, dist, bandwidth)
-        gdf1["weight"] = k
-        g = gdf1.sample(n=n, weights="weight", replace=True)
+    dist = cdist(coords2, coords1, metric)
+    ks = _kernel(kernel, dist, bandwidth)
 
-        if col is not None:
-            g = g[col].to_numpy()
-            gs.append(g)
-        else:
-            gs.append(g)
-    return gs
+    return [gdf1.sample(n=r, weights=k, replace=True) for k in ks]
