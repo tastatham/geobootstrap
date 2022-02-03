@@ -59,5 +59,6 @@ def geobootstrap(
         if col is not None:
             g = g[col].to_numpy()
             gs.append(g)
-
+        else:
+            gs.append(g)
     return gs
