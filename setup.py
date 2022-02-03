@@ -6,7 +6,7 @@ def readme():
         return f.read()
 
 
-install_requires = ["pandas", "numpy", "geopandas", "scipy"]
+install_requires = ["geopandas==0.10.2", "scipy==1.7.3"]
 
 setup(
     name="geobootstrap",
