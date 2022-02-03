@@ -12,7 +12,7 @@ def geobootstrap(
     metric="euclidean",
     kernel="gaussian",
     bandwidth=1000,
-    col="pop_density",
+    col=None,
 ):
     """
     Parameters
@@ -34,7 +34,7 @@ def geobootstrap(
     bandwidth : int
        bandwidth value in metres
     col : str (optional)
-        whether to return list of to return column
+        whether to return list of gpd.GeoDataFrames or arrays, based on column
 
     Returns
     -------
@@ -48,7 +48,6 @@ def geobootstrap(
         coords2 = _get_coords(gdf2)
 
     gs = []
-
     for i in range(len(gdf2)):
         coord = coords2[i]
         dist = cdist([coord], coords1, metric).reshape(-1)
