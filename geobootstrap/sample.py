@@ -8,10 +8,10 @@ def geobootstrap(
     gdf2,
     coords1,
     coords2,
+    n=1000,
     metric="euclidean",
     kernel="gaussian",
     bandwidth=1000,
-    frac=1.0,
     col="pop_density",
 ):
     """
@@ -24,6 +24,8 @@ def geobootstrap(
     coords1 : array_like (optional)
         coordinates for geodataframe GeoDataFrame to calculate distances
     coords2 : gpd.GeoDataFrame (optional)
+    n : int
+        how many resamples with replacement to return
         coordinates for geodataframe GeoDataFrame to calculate distances
     metric : str
         how to calculate distances between coordinates
@@ -31,10 +33,8 @@ def geobootstrap(
         kernel function
     bandwidth : int
        bandwidth value in metres
-    frac : int
-        what resampling fraction to return
     col : str (optional)
-        to return column
+        whether to return list of to return column
 
     Returns
     -------
@@ -54,7 +54,7 @@ def geobootstrap(
         dist = cdist([coord], coords1, metric).reshape(-1)
         k = _kernel(kernel, dist, bandwidth)
         gdf1["weight"] = k
-        g = gdf1.sample(frac=frac, weights="weight", replace=True)
+        g = gdf1.sample(n=n, weights="weight", replace=True)
 
         if col is not None:
             g = g[col].to_numpy()
