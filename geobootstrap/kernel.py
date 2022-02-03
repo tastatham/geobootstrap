@@ -1,10 +1,10 @@
 import numpy as np
+import warnings
 
 
 def _kernel(function, dist, bandwidth, fixed=True):
     """
-    Function that defines kernel for geobootstrapping
-    using distance and a fixed bandwidth
+    Creates distanced-based kernel weights for geobootstrap
 
     In general, a fixed bandwidth suits more regular sample configurations,
     whereas an adaptive bandwidth suits irregular sample configurations
@@ -22,8 +22,8 @@ def _kernel(function, dist, bandwidth, fixed=True):
 
     Returns
     -------
-    s
-
+    type: array_like
+        distance-based kernel weights
     """
 
     if fixed is True:
@@ -46,9 +46,22 @@ def _kernel_funcs(function, zs):
 
     Returns
     -------
-    s
-
+    type: array_like
+        kernel weights
     """
+
+    functions = [
+        "triangular",
+        "uniform",
+        "quadratic",
+        "quartic",
+        "gaussian",
+        "bisquare",
+        "exponential",
+    ]
+
+    if function != "gaussian":
+        warnings.warn("Only Gaussian kernels have been tested")
 
     if function == "triangular":
         return 1 - zs
@@ -65,4 +78,7 @@ def _kernel_funcs(function, zs):
     elif function == "exponential":
         return np.exp(-zs)
     else:
-        raise ValueError("Unsupported kernel function", function)
+        raise ValueError(
+            f"Only the following kernels are supported: \
+            {functions}"
+        )

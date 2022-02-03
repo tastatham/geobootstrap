@@ -98,9 +98,8 @@ def _get_points(gdf, method, bounds, n=None, p=None):
 
     if "x" and "y" not in gdf:
         print(
-            "x and y not in GeoDataFrame, \
-            estimating coordinates using %s"
-            % method
+            f"x and y not in GeoDataFrame, \
+            estimating coordinates using {method}"
         )
 
         if bounds is None:
@@ -218,9 +217,8 @@ def _poly_to_points(
 
     if "x" and "y" not in gdf:
         print(
-            "x and y attributes not in GeoDataFrame, \
-            estimating coordinates using %s"
-            % method
+            f"x and y attributes not in GeoDataFrame, \
+            estimating coordinates using {method}"
         )
 
         gdf_points = _get_points(gdf, method, bounds, n, p)
