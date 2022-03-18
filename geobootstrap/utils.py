@@ -3,73 +3,123 @@ import pandas as pd
 import geopandas as gpd
 
 
-def _get_coords(gdf):
+def _get_coords(gdf, method="mid points", p=1000, n=1, join=False):
     """
     Get array containing x,y coordinates from GeoDataFrame
 
     Parameters
     ----------
     gdf : gpd.GeoDataFrame
-        a
+
+
+
+    method : str
+        method for generating coordinates for each polygon
+    uid : str
+        GeoDataFrame unique identifier
+    bounds : array_like
+        GeoDataFrame bounds
+    p : int (default: 1000)
+        number of random points to generate within bounds
+    n : int (default: 1)
+        number of random points to generate within polygon (default 1)
+    join : bool (default: False)
+        whether to spatially join original data back
+
     Returns
     -------
     type : np.array
         array containing x and y values
     """
 
-    if "x" and "y" not in gdf:
-        raise ValueError("x and y attributes not present in GeoDataFrame")
-    # elif gdf does not contain point geoms:
-    #    raise ValueError("geometry column must be of type Point")
-    else:
+    if "x" and "y" in gdf:
         return gdf[["x", "y"]].values
 
+    else:
+        geom_types = gdf.geom_type
 
-def _random_points(bounds, p):
+        if len(geom_types.unique()) <= 1:
+            geom_type = geom_types[0]
+
+        else:
+            print("Geobootstrap does not support mixed geometry types")
+
+        if geom_type == "Point":
+            x, y = gdf.geometry.x, gdf.geometry.y
+
+            return np.array([x, y]).T
+
+        elif geom_type == "Polygon":
+            gdf = _poly_to_points(
+                gdf,
+                method="mid points",
+                uid=None,
+                bounds=None,
+                p=1000,
+                n=1,
+                join=False,
+            )
+            x, y = gdf.geometry.x, gdf.geometry.y
+
+            return np.array([x, y]).T
+
+        else:
+            raise ValueError("Geobootstrap only supports Point and Polygon types")
+
+
+def _poly_to_points(
+    gdf,
+    method="mid points",
+    uid=None,
+    bounds=None,
+    p=1000,
+    n=1,
+    join=False,
+):
     """
-    Calculate p random points based on GeoDataFrame bounds
+    Transforms polygon geometries to point ones using a method
 
     Parameters
     ----------
+    gdf : gpd.GeoDataFrame
+        GeoDataFrame containing polygons
+    method : str
+        method for generating coordinates for each polygon
+    uid : str
+        GeoDataFrame unique identifier
     bounds : array_like
-        bounds of GeoDataFrame
+        GeoDataFrame bounds
     p : int
-        number of random points to generate points within bounds
+        number of random points to generate within bounds
+    n : int
+        number of random points to generate within polygon (default 1)
+    join :
+        whether to spatially join original data back
 
     Returns
-    -------
-    type : np.array
-        array containing random points
-    """
-    return np.array(
-        [
-            np.random.uniform(bounds[0], bounds[2], p),
-            np.random.uniform(bounds[1], bounds[3], p),
-        ]
-    ).T
-
-
-def _calculate_mid_points(bounds):
-    """
-    Calculate middle points based on the geometry bounds
-
-    Parameters
-    ----------
-    bounds : array_like
-        array containing xmin, ymin, xmax, ymax
-
-    Returns
-    -------
-    type: np.array
-        x_mids : mid points of x values
-        y_mids : mid points of y values
+    ---------
+    type : gpd.GeoDataFrame
     """
 
-    # Calculate mid points for x and y bound coords
-    x_mids = (bounds[:, 0] + bounds[:, 2]) / 2.0
-    y_mids = (bounds[:, 1] + bounds[:, 3]) / 2.0
+    if "x" and "y" not in gdf:
+        print(
+            f"x and y attributes not in GeoDataFrame, \
+            estimating coordinates using {method}"
+        )
 
-    return x_mids, y_mids
+        gdf_points = _get_points(gdf, method, bounds, n, p)
+
+    else:
+        gdf_points = gpd.GeoDataFrame(
+            geometry=gpd.points_from_xy(gdf["x"], gdf["y"]), crs=gdf.crs
+        )
+
+    if join is True:
+        gdf = gpd.sjoin(gdf_points, gdf, op="intersects")
+        return gdf
+
+    else:
+        return gdf_points
 
 
 def _get_points(gdf, method, bounds, n=None, p=None):
@@ -181,56 +231,48 @@ def _random_points_sample(gdf, bounds=None, n=1, p=1000):
     return pd.concat(gdfs)
 
 
-def _poly_to_points(
-    gdf,
-    method="mid points",
-    uid=None,
-    bounds=None,
-    p=1000,
-    n=1,
-    join=False,
-):
+def _random_points(bounds, p):
     """
-    Transforms polygon geometries to point ones using a method
+    Calculate p random points based on GeoDataFrame bounds
 
     Parameters
     ----------
-    gdf : gpd.GeoDataFrame
-        GeoDataFrame containing polygons
-    method : str
-        method for generating coordinates for each polygon
-    uid : str
-        GeoDataFrame unique identifier
     bounds : array_like
-        GeoDataFrame bounds
+        bounds of GeoDataFrame
     p : int
-        number of random points to generate within bounds
-    n : int
-        number of random points to generate within polygon (default 1)
-    join :
-        whether to spatially join original data back
+        number of random points to generate points within bounds
 
     Returns
-    ---------
-    type : gpd.GeoDataFrame
+    -------
+    type : np.array
+        array containing random points
+    """
+    return np.array(
+        [
+            np.random.uniform(bounds[0], bounds[2], p),
+            np.random.uniform(bounds[1], bounds[3], p),
+        ]
+    ).T
+
+
+def _calculate_mid_points(bounds):
+    """
+    Calculate middle points based on the geometry bounds
+
+    Parameters
+    ----------
+    bounds : array_like
+        array containing xmin, ymin, xmax, ymax
+
+    Returns
+    -------
+    type: np.array
+        x_mids : mid points of x values
+        y_mids : mid points of y values
     """
 
-    if "x" and "y" not in gdf:
-        print(
-            f"x and y attributes not in GeoDataFrame, \
-            estimating coordinates using {method}"
-        )
+    # Calculate mid points for x and y bound coords
+    x_mids = (bounds[:, 0] + bounds[:, 2]) / 2.0
+    y_mids = (bounds[:, 1] + bounds[:, 3]) / 2.0
 
-        gdf_points = _get_points(gdf, method, bounds, n, p)
-
-    else:
-        gdf_points = gpd.GeoDataFrame(
-            geometry=gpd.points_from_xy(gdf["x"], gdf["y"]), crs=gdf.crs
-        )
-
-    if join is True:
-        gdf = gpd.sjoin(gdf_points, gdf, op="intersects")
-        return gdf
-
-    else:
-        return gdf_points
+    return x_mids, y_mids
