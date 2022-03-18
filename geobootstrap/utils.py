@@ -3,15 +3,15 @@ import pandas as pd
 import geopandas as gpd
 
 
-def _get_coords(gdf, method="mid points", p=1000, n=1, join=False):
+def _get_coords(
+    gdf, method="mid points", uid=None, bounds=None, p=1000, n=1, join=False
+):
     """
     Get array containing x,y coordinates from GeoDataFrame
 
     Parameters
     ----------
     gdf : gpd.GeoDataFrame
-
-
 
     method : str
         method for generating coordinates for each polygon
@@ -38,11 +38,10 @@ def _get_coords(gdf, method="mid points", p=1000, n=1, join=False):
     else:
         geom_types = gdf.geom_type
 
-        if len(geom_types.unique()) <= 1:
-            geom_type = geom_types[0]
+        if len(geom_types.unique()) > 1:
+            raise ValueError("Geobootstrap does not support mixed geometry types")
 
-        else:
-            print("Geobootstrap does not support mixed geometry types")
+        geom_type = geom_types[0]
 
         if geom_type == "Point":
             x, y = gdf.geometry.x, gdf.geometry.y
@@ -50,15 +49,8 @@ def _get_coords(gdf, method="mid points", p=1000, n=1, join=False):
             return np.array([x, y]).T
 
         elif geom_type == "Polygon":
-            gdf = _poly_to_points(
-                gdf,
-                method="mid points",
-                uid=None,
-                bounds=None,
-                p=1000,
-                n=1,
-                join=False,
-            )
+            print("Using mid points, with 1000 points as default")
+            gdf = _poly_to_points(gdf)
             x, y = gdf.geometry.x, gdf.geometry.y
 
             return np.array([x, y]).T
