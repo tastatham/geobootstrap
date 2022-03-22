@@ -154,7 +154,6 @@ def _get_points(gdf, method, bounds, n=None, p=None):
             bounds = gdf.bounds.to_numpy()
 
         if method == "mid points":
-            from geobootstrap.utils import _calculate_mid_points
 
             x_mids, y_mids = _calculate_mid_points(bounds)
             points = np.array([x_mids, y_mids]).T
