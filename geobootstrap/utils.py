@@ -4,7 +4,13 @@ import geopandas as gpd
 
 
 def _get_coords(
-    gdf, method="mid points", uid=None, bounds=None, p=1000, n=1, join=False
+    gdf,
+    method="mid points",
+    uid=None,
+    bounds=None,
+    p=1000,
+    n=1,
+    join=False,
 ):
     """
     Get array containing x,y coordinates from GeoDataFrame
@@ -41,7 +47,7 @@ def _get_coords(
         if len(geom_types.unique()) > 1:
             raise ValueError("Geobootstrap does not support mixed geometry types")
 
-        geom_type = geom_types[0]
+        geom_type = geom_types[0].values
 
         if geom_type == "Point":
             x, y = gdf.geometry.x, gdf.geometry.y
