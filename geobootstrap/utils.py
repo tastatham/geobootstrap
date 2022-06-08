@@ -5,13 +5,16 @@ import geopandas as gpd
 def _get_coords(gdf, method="random", size=1, batch_size=1000):
     """
     Get array containing x,y coordinates from GeoDataFrame
+
     Parameters
     ----------
     gdf : gpd.GeoDataFrame
-
+        GeoDataFrame to return coordinates from
+    method : str
+        what method to use to sample polygons
     size : int (default: 1)
         number of random points to generate within polygon (default 1)
-    bath_size : int (default: 1000)
+    batch_size : int (default: 1000)
         number of random points to generate within bounds
 
     Returns
@@ -43,8 +46,21 @@ def _get_coords(gdf, method="random", size=1, batch_size=1000):
 
 def sample_points(gdf, size, batch_size):
     """
-    modified version of ljw's st_sample PR:
-    https://github.com/geopandas/geopandas/pull/2363
+    Get array containing x,y coordinates from GeoDataFrame
+
+    Parameters
+    ----------
+    gdf : gpd.GeoDataFrame
+
+    size : int (default: 1)
+        number of random points to generate within polygon (default 1)
+    batch_size : int (default: 1000)
+        number of random points to generate within bounds
+
+    Returns
+    -------
+    type : np.array
+        array containing x and y values
     """
 
     geoms = gdf.geometry.apply(_uniform_polygon, size=size)
@@ -59,8 +75,21 @@ def sample_points(gdf, size, batch_size):
 
 def _uniform_polygon(geom, size=1, batch_size=None):
     """
-    modified version of ljw st_sample PR - random method only
-    https://github.com/geopandas/geopandas/pull/2363
+    Return n points contained within a polygon
+
+    Parameters
+    ----------
+    geom : gpd.GeoDataFrame.geometry
+        geometry for a gpd.GeoDataFrame
+    size : int (default: 1)
+        number of random points to generate within polygon (default 1)
+    batch_size : int (default: 1000)
+        number of random points to generate within bounds
+
+    Returns
+    -------
+    type : gpd.GeoSeries
+        GeoSeries containing n points contained within a polygon
     """
     from geopandas.array import points_from_xy
     from geopandas.geoseries import GeoSeries
