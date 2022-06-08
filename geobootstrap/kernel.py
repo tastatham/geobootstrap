@@ -28,8 +28,6 @@ def _kernel(function, dist, bandwidth, fixed=True):
 
     if fixed is True:
         return _kernel_funcs(function, zs=dist / bandwidth)
-    else:
-        raise ValueError("Only fixed bandwidths are currently supported")
 
 
 def _kernel_funcs(function, zs):
