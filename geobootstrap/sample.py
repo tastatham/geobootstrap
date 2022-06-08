@@ -9,11 +9,14 @@ from geobootstrap.kernel import _kernel
 def geobootstrap(
     gdf1,
     gdf2,
+    coords1=None,
+    coords2=None,
     r=1000,
     kernel="gaussian",
     metric="euclidean",
     bandwidth=1000,
-    fix=False,
+    fixed=True,
+    check=False
 ):
     """
     Bootstrap a GeoDataFrame using defined kernel weights,
@@ -23,8 +26,12 @@ def geobootstrap(
     ----------
     gdf1 : gpd.GeoDataFrame
         GeoDataFrame to calculate distances from
-    gdf1 : gpd.GeoDataFrame
+    gdf2 : gpd.GeoDataFrame
         GeoDataFrame to calculate distances to
+    coords1: array_like
+        two dimensional array containing x, y values for sources
+   coords2: array_like
+        two dimensional array containing x, y values for gdf2
     r : int
         how many resamples with replacement to return
     kernel : str
@@ -33,9 +40,10 @@ def geobootstrap(
         how to calculate distances between coordinates
     bandwidth : int
        bandwidth or fixed distance
-    fix: bool
-        to replace the bandwidth value, if less than the minimum distance
-        for all zones to have neighbours
+    fixed: bool
+        whether to apply a fixed or adaptive (knn) bandwidth
+    check: bool
+        whether to check the bandwidth set allows at least 1 knn
 
     Returns
     -------
@@ -43,15 +51,19 @@ def geobootstrap(
         list of pd.DataFrames
     """
 
-    coords1, coords2 = _get_coords(gdf1), _get_coords(gdf2)
+    if fixed is False:
+        raise ValueError("Only fixed bandwidths are currently supported")
 
-    if fix is True:
-        bandwidth = _check_bandwidth(coords1, coords2, bandwidth, fix)
-    else:
-        _check_bandwidth(coords1, coords2, bandwidth, fix)
+    if coords1 is None:
+        coords1 = _get_coords(gdf1)
+    if coords2 is None:
+        coords2 = _get_coords(gdf2)
+
+    if check is True:
+        bandwidth = _check_bandwidth(coords1, coords2, bandwidth, fix=False)
 
     dist = sp.distance.cdist(coords2, coords1, metric)
-    ks = _kernel(kernel, dist, bandwidth)
+    ks = _kernel(kernel, dist, bandwidth, fixed)
 
     return [gdf1.sample(n=r, weights=k, replace=True) for k in ks]
 
