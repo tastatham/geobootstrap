@@ -1,5 +1,8 @@
+import math
+import warnings
 import numpy as np
 import geopandas as gpd
+from scipy.spatial import cKDTree
 
 
 def _get_coords(gdf, method="random", size=1, batch_size=1000):
@@ -135,3 +138,41 @@ def _calculate_mid_points(bounds):
     y_mids = (bounds[:, 1] + bounds[:, 3]) / 2.0
 
     return x_mids, y_mids
+
+
+def _check_bandwidth(coords1, coords2, bandwidth):
+
+    """A function that checks whether the bandwidth set
+    allows for pooling from at least 1 neighbour
+
+    Parameters
+    ----------
+    coords1: np.array
+        array containing x,y coordinate pairs
+    coords2: np.array
+        array containing x,y coordinate pairs
+    bandwidth: int
+        fixed distance for finding neighbours
+
+    Returns
+    -------
+    int: (optional)
+        bandwidth
+
+    """
+
+    # Create KD-tree
+    tree = cKDTree(coords1)
+    # Get number of neighbours within bandwidth
+    k = tree.query_ball_point(coords2, r=bandwidth, return_length=True)
+    # If any observation has less than 1 neighbour,
+    # then calculate the minimum distance for each to have neighbours
+    if np.any(k <= 1) is True:
+        d, i = tree.query(coords2, k=1)
+        max_d = math.ceil(d.max())
+
+        warnings.warn(
+            f"The bandwidth: {bandwidth} will result in the indexes:"
+            f"{i} not having any values pooled. If this is not desired, use"
+            f"a bandwidth greater than {max_d}"
+        )
