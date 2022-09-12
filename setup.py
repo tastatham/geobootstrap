@@ -10,7 +10,7 @@ install_requires = ["geopandas==0.10.2", "scipy==1.7.3"]
 
 setup(
     name="geobootstrap",
-    version="0.1",
+    version="0.11",
     description="Python tools for geobootstrapping",
     long_description=(readme()),
     long_description_content_type="text/markdown",
